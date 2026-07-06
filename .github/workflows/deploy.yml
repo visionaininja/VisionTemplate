@@ -26,34 +26,34 @@ jobs:
             cd /opt/VisionTemplate
 
             # 2. Fetch changes but keep a reference point for a rollback
-            echo "🔄 Pulling latest changes..."
+            echo "Pulling latest changes..."
             git fetch --all
             git reset --hard origin/main
 
-            echo "🏗️ Building new container image..."
+            echo "Building new container image..."
             # Build the new webapp container. If it fails to compile, abort immediately before touching the live app.
             if ! sudo /usr/bin/docker compose build webapp; then
-                echo "❌ ERROR: Compilation failed! Rolling repository back to previous stable git state..."
+                echo "ERROR: Compilation failed! Rolling repository back to previous stable git state..."
                 git reset --hard HEAD@{1}
                 exit 1
             fi
 
-            echo "🚀 Launching new version..."
+            echo "Launching new version..."
             # Bring up the new version (Docker handles replacing the container with almost zero downtime)
             sudo /usr/bin/docker compose up -d
 
-            echo "⏳ Waiting 10 seconds for service boot..."
+            echo " Waiting 10 seconds for service boot..."
             sleep 10
 
-            echo "📋 Executing health check on local port 3000..."
+            echo " Executing health check on local port 3000..."
             HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://127.0.0.1:3000 || echo "000")
 
             if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ] || [ "$HTTP_STATUS" -eq 301 ]; then
-                echo "✅ SUCCESS: Application is responsive (HTTP $HTTP_STATUS)!"
+                echo " SUCCESS: Application is responsive (HTTP $HTTP_STATUS)!"
                 sudo /usr/bin/docker image prune -f
             else
-                echo "🚨 CRITICAL: Health check failed with status $HTTP_STATUS!"
-                echo "⏪ Initiating automated rollback to the last stable configuration..."
+                echo " CRITICAL: Health check failed with status $HTTP_STATUS!"
+                echo " Initiating automated rollback to the last stable configuration..."
                 
                 # Revert git back to the last working commit hash before this push
                 git reset --hard HEAD@{1}
@@ -62,6 +62,6 @@ jobs:
                 sudo /usr/bin/docker compose build webapp
                 sudo /usr/bin/docker compose up -d
                 
-                echo "✅ Rollback successful. Old stable version restored."
+                echo " Rollback successful. Old stable version restored."
                 exit 1
             fi
