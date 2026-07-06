@@ -15,27 +15,22 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. Ensure /opt exists and is owned by the ubuntu user
-            sudo mkdir -p /opt
-            sudo chown -R ubuntu:ubuntu /opt
-
-            # 2. Safely clone the repository if missing, or clean it if it exists
-            if [ ! -d "/opt/VisionTemplate" ]; then
-              cd /opt
-              git clone https://github.com/visionaininja/VisionTemplate.git
-            else
+            # 1. Clean up any existing running containers to free up ports
+            if [ -d "/opt/VisionTemplate" ]; then
               cd /opt/VisionTemplate
-              git config pull.rebase false
-              git reset --hard HEAD
-              git clean -fd
+              sudo /usr/bin/docker compose down --remove-orphans || true
             fi
 
-            # 3. Fetch fresh modifications and force overwrite local copy
+            # 2. Obliterate the directory to ensure no missing files
+            sudo rm -rf /opt/VisionTemplate
+
+            # 3. Ensure /opt exists and clone a 100% fresh copy from GitHub
+            sudo mkdir -p /opt
+            sudo chown -R ubuntu:ubuntu /opt
+            cd /opt
+            git clone https://github.com/visionaininja/VisionTemplate.git
+
+            # 4. Build and run completely clean
             cd /opt/VisionTemplate
-            git fetch --all
-            git reset --hard origin/main
-            
-            # 4. Rebuild the app using absolute binary paths
-            sudo /usr/bin/docker compose down --remove-orphans
             sudo /usr/bin/docker compose build --no-cache
             sudo /usr/bin/docker compose up -d
