@@ -1,4 +1,4 @@
-name: CI/CD Live Bare-VPS Deployment
+name: CI/CD Live Deployment
 
 on:
   push:
@@ -15,22 +15,20 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. Clean up any existing running containers to free up ports
-            if [ -d "/opt/VisionTemplate" ]; then
-              cd /opt/VisionTemplate
-              sudo /usr/bin/docker compose down --remove-orphans || true
-            fi
-
-            # 2. Obliterate the directory to ensure no missing files
-            sudo rm -rf /opt/VisionTemplate
-
-            # 3. Ensure /opt exists and clone a 100% fresh copy from GitHub
+            # 1. Ensure the parent directory exists and we have permissions
             sudo mkdir -p /opt
             sudo chown -R ubuntu:ubuntu /opt
-            cd /opt
-            git clone https://github.com/visionaininja/VisionTemplate.git
 
-            # 4. Build and run completely clean
+            # 2. If the folder doesn't exist, clone it fresh
+            if [ ! -d "/opt/VisionTemplate" ]; then
+              cd /opt
+              git clone https://github.com/visionaininja/VisionTemplate.git
+            fi
+
+            # 3. Jump in, sync up, and build hands-free
             cd /opt/VisionTemplate
-            sudo /usr/bin/docker compose build --no-cache
-            sudo /usr/bin/docker compose up -d
+            git reset --hard HEAD
+            git pull origin main
+            sudo docker compose down
+            sudo docker compose build --no-cache
+            sudo docker compose up -d
