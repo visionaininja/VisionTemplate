@@ -1,4 +1,3 @@
-
 name: CI/CD Live Bare-VPS Deployment
 
 on:
@@ -16,15 +15,26 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # 1. Gracefully stop current containers if they exist anywhere
+            if [ -d "/opt/VisionTemplate" ]; then
+              cd /opt/VisionTemplate
+              if [ -f "docker-compose.yml" ]; then
+                sudo /usr/bin/docker compose down --remove-orphans || true
+              fi
+            fi
+
+            # 2. Delete the old deployment path completely to avoid nesting or file sync errors
+            sudo rm -rf /opt/VisionTemplate
+
+            # 3. Ensure the parent directory /opt exists with correct user permissions
             sudo mkdir -p /opt
             sudo chown -R ubuntu:ubuntu /opt
-            if [ ! -d "/opt/VisionTemplate" ]; then
-              cd /opt
-              git clone https://github.com/visionaininja/VisionTemplate.git
-            fi
+            
+            # 4. Clone a 100% clean copy straight into the folder target
+            cd /opt
+            git clone https://github.com/visionaininja/VisionTemplate.git VisionTemplate
+
+            # 5. Move inside the fresh repo and launch containers natively on Port 80
             cd /opt/VisionTemplate
-            git reset --hard HEAD
-            git pull origin main
-            sudo docker compose down
-            sudo docker compose build --no-cache
-            sudo docker compose up -d
+            sudo /usr/bin/docker compose build --no-cache
+            sudo /usr/bin/docker compose up -d
