@@ -7,8 +7,7 @@ system — cool indigo brand, Geist type, dark mode by default.
 Use it as a **GitHub template**: create a new repo from it for each demo, rename in
 `app/config.ts`, and start building.
 
-## Quick start
-
+## Quick starttest
 Requires Node 20+ and a local Postgres install (e.g. `brew install postgresql@14`).
 
 ```bash
