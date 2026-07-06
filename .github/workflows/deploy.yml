@@ -19,21 +19,23 @@ jobs:
             sudo mkdir -p /opt
             sudo chown -R ubuntu:ubuntu /opt
 
-            # 2. Safely clone the repository if missing, or reset it if it exists
+            # 2. Safely clone the repository if missing, or clean it if it exists
             if [ ! -d "/opt/VisionTemplate" ]; then
               cd /opt
               git clone https://github.com/visionaininja/VisionTemplate.git
             else
               cd /opt/VisionTemplate
+              git config pull.rebase false
               git reset --hard HEAD
               git clean -fd
             fi
 
-            # 3. Pull fresh modifications and run containers using absolute binary paths
+            # 3. Fetch fresh modifications and force overwrite local copy
             cd /opt/VisionTemplate
-            git pull origin main
+            git fetch --all
+            git reset --hard origin/main
             
-            # 4. Rebuild the app with zero cached layers using explicit docker paths
+            # 4. Rebuild the app using absolute binary paths
             sudo /usr/bin/docker compose down --remove-orphans
             sudo /usr/bin/docker compose build --no-cache
             sudo /usr/bin/docker compose up -d
