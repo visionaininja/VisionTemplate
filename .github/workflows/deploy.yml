@@ -1,0 +1,22 @@
+name: CI/CD Live Deployment
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploying changes over Secure SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: 170.9.233.236
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/VisionTemplate
+            git reset --hard HEAD
+            git pull origin main
+            sudo docker compose down
+            sudo docker compose up -d --build
