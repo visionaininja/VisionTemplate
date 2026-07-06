@@ -15,17 +15,12 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. Ensure the clean workspace setup exists on the bare VPS
             sudo mkdir -p /opt
             sudo chown -R ubuntu:ubuntu /opt
-
-            # 2. Dynamically download the fresh code repo on push
             if [ ! -d "/opt/VisionTemplate" ]; then
               cd /opt
               git clone https://github.com/visionaininja/VisionTemplate.git
             fi
-
-            # 3. Pull updates, clear cache layers, and run cleanly on port 80
             cd /opt/VisionTemplate
             git reset --hard HEAD
             git pull origin main
