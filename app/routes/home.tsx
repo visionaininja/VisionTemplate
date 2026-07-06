@@ -45,7 +45,7 @@ export default function Home() {
           </span>
 
           <h1 className="text-display text-balance max-w-4xl text-foreground">
-            A cleanest canvasv ryan danielle for your <span className="gradient-text-brand">next demo</span>
+            A cleanest canvasv vision for your <span className="gradient-text-brand">next demo</span>
           </h1>
 
           <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
